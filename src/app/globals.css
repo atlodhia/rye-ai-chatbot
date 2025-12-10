@@ -77,3 +77,8 @@
     overflow: hidden;
   }
 }
+
+html, body {
+  background: #14191F;
+  color: #FFFFFF;
+}

@@ -9,19 +9,21 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^2.0.14",
-    "@ai-sdk/react": "^2.0.14",
-    "@stripe/react-stripe-js": "^3.9.0",
-    "@stripe/stripe-js": "^7.8.0",
+    "@ai-sdk/openai": "^2.0.72",
+    "@ai-sdk/provider-utils": "^3.0.3",
+    "@ai-sdk/react": "^2.0.72",
+    "@basis-theory/basis-theory-js": "^4.30.0",
+    "@basis-theory/react-elements": "^2.7.0",
     "@tailwindcss/typography": "^0.5.16",
-    "ai": "^5.0.14",
+    "ai": "^5.0.102",
     "autoprefixer": "^10.4.21",
     "cheerio": "^1.1.2",
-    "next": "14.2.5",
+    "next": "^14.2.33",
     "react": "^18",
     "react-dom": "^18",
     "react-markdown": "^10.1.0",
-    "zod": "^4.0.17"
+    "rss-parser": "^3.13.0",
+    "zod": "^4.1.13"
   },
   "devDependencies": {
     "@types/cheerio": "^0.22.35",

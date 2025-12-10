@@ -1,52 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createRyeClient } from '@/lib/rye';
+import { ryeRestFetch } from '@/lib/ryeRest';
 
-interface ConfirmIntentRequest {
-  checkoutIntentId: string;
-  paymentMethodId: string;
-}
-
-export async function POST(request: NextRequest) {
+export async function POST(req: NextRequest) {
   try {
-    const body: ConfirmIntentRequest = await request.json();
+    const { checkoutIntentId, basisTheoryToken } = await req.json();
 
-    // Validate required fields
-    if (!body.checkoutIntentId || !body.paymentMethodId) {
+    if (!checkoutIntentId || !basisTheoryToken) {
       return NextResponse.json(
-        { error: 'Missing required fields: checkoutIntentId and paymentMethodId are required' },
+        { error: 'Missing checkoutIntentId or basisTheoryToken' },
         { status: 400 }
       );
     }
 
-    // Initialize Rye client
-    const ryeClient = createRyeClient({
-      apiKey: process.env.RYE_API_KEY!,
-      baseUrl: process.env.RYE_API_BASE!,
-    });
-
-    // Confirm checkout intent with payment method
-    const confirmedIntent = await ryeClient.confirmCheckoutIntent(
-      body.checkoutIntentId,
+    const r = await ryeRestFetch(
+      `/v2/checkout-intents/${checkoutIntentId}/confirm`,
       {
-        paymentMethod: {
-          type: 'stripe_token',
-          stripeToken: body.paymentMethodId, // 'tok_visa', // You can use tok_visa for testing if tokenization isn't setup, yet.
-        },
+        method: 'POST',
+        body: JSON.stringify({ basisTheoryToken }),
       }
     );
 
-    return NextResponse.json({
-      success: true,
-      checkoutIntent: confirmedIntent,
-    });
+    const text = await r.text();
+    if (!r.ok) {
+      return NextResponse.json(
+        { error: `Rye error ${r.status}: ${text}` },
+        { status: 500 }
+      );
+    }
 
+    return new NextResponse(text, {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' },
+    });
   } catch (error) {
     console.error('Error confirming checkout intent:', error);
-
     return NextResponse.json(
       {
-        error: 'Failed to confirm payment',
-        details: error instanceof Error ? error.message : 'Unknown error'
+        error: 'Failed to confirm checkout intent',
+        details:
+          error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
