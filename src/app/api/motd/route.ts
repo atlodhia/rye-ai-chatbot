@@ -22,7 +22,7 @@ export async function GET(request: Request) {
   try {
     // Add CORS headers for Shopify integration
     const origin = request.headers.get('origin');
-    const corsHeaders = {
+    const corsHeaders: Record<string, string> = {
       'Access-Control-Allow-Origin': origin || '*',
       'Access-Control-Allow-Methods': 'GET, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, ngrok-skip-browser-warning',
@@ -135,10 +135,10 @@ export async function GET(request: Request) {
     const dayGreeting = `Happy ${weekday} (${dateStr}) — welcome back.`;
 
     const origin = request.headers.get('origin');
-    const corsHeaders = {
+    const corsHeaders: Record<string, string> = {
       'Access-Control-Allow-Origin': origin || '*',
       'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
+      'Access-Control-Allow-Headers': 'Content-Type, ngrok-skip-browser-warning',
     };
 
     return Response.json(
@@ -156,13 +156,15 @@ export async function GET(request: Request) {
 }
 
 // Handle OPTIONS request for CORS preflight
-export async function OPTIONS() {
+export async function OPTIONS(request: Request) {
+  const origin = request.headers.get('origin');
   return new Response(null, {
     status: 200,
     headers: {
-      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Origin': origin || '*',
       'Access-Control-Allow-Methods': 'GET, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, ngrok-skip-browser-warning',
+      'Access-Control-Max-Age': '86400', // Cache preflight for 24 hours
     },
   });
 }
