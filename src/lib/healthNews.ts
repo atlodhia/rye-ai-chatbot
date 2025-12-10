@@ -9,12 +9,49 @@ const parser = new Parser();
 
 // Health and wellness RSS feeds from science-backed sources
 const NEWS_FEEDS = [
-  'https://www.sciencedaily.com/rss/health_medicine.xml', // Science Daily - Health & Medicine
-  'https://feeds.npr.org/1007/rss.xml', // NPR Health
+  'https://feeds.npr.org/1007/rss.xml', // NPR Health - more accessible content
   'https://feeds.bbci.co.uk/news/health/rss.xml', // BBC Health
+  'https://www.sciencedaily.com/rss/health_medicine.xml', // Science Daily - Health & Medicine (fallback)
 ];
 
-// Keywords to filter for health/wellness/science content
+// Keywords that indicate actionable, near-term wellness content (prioritized)
+const ACTIONABLE_KEYWORDS = [
+  'walking',
+  'exercise',
+  'workout',
+  'routine',
+  'daily',
+  'tips',
+  'benefits',
+  'improves',
+  'reduces',
+  'helps',
+  'study finds',
+  'research shows',
+  'simple',
+  'easy',
+  'quick',
+  'minutes',
+  'steps',
+  'movement',
+  'activity',
+  'fitness',
+  'wellness',
+  'health',
+  'nutrition',
+  'diet',
+  'sleep',
+  'stress',
+  'mental health',
+  'wellbeing',
+  'lifestyle',
+  'habits',
+  'practice',
+  'technique',
+  'method',
+];
+
+// Keywords to filter for health/wellness content (broader set)
 const HEALTH_KEYWORDS = [
   'health',
   'wellness',
@@ -22,18 +59,11 @@ const HEALTH_KEYWORDS = [
   'medicine',
   'study',
   'research',
-  'scientific',
-  'treatment',
-  'therapy',
-  'disease',
-  'condition',
   'nutrition',
   'diet',
   'exercise',
   'fitness',
   'mental health',
-  'cancer',
-  'diabetes',
   'heart',
   'brain',
   'immune',
@@ -43,29 +73,8 @@ const HEALTH_KEYWORDS = [
   'stress',
   'anxiety',
   'depression',
-  'clinical',
-  'trial',
-  'patient',
-  'doctor',
-  'physician',
-  'hospital',
-  'healthcare',
   'wellbeing',
   'prevention',
-  'diagnosis',
-  'symptom',
-  'syndrome',
-  'disorder',
-  'infection',
-  'bacteria',
-  'virus',
-  'vaccine',
-  'medication',
-  'drug',
-  'pharmaceutical',
-  'biomedical',
-  'epidemiology',
-  'public health',
   'lifestyle',
   'aging',
   'longevity',
@@ -74,11 +83,43 @@ const HEALTH_KEYWORDS = [
 function isHealthRelated(text: string): boolean {
   if (!text) return false;
   const textLower = text.toLowerCase();
-  // Check if at least 2 health keywords are present
-  const keywordCount = HEALTH_KEYWORDS.filter((keyword) =>
+  
+  // Prioritize actionable content - check for actionable keywords first
+  const actionableCount = ACTIONABLE_KEYWORDS.filter((keyword) =>
     textLower.includes(keyword)
   ).length;
-  return keywordCount >= 2;
+  
+  // Also check for general health keywords
+  const healthKeywordCount = HEALTH_KEYWORDS.filter((keyword) =>
+    textLower.includes(keyword)
+  ).length;
+  
+  // Prefer stories with actionable keywords (at least 1) OR multiple health keywords (at least 2)
+  // This prioritizes actionable content while still allowing broader health stories
+  return actionableCount >= 1 || healthKeywordCount >= 2;
+}
+
+function scoreStoryRelevance(story: HealthStory): number {
+  const textLower = `${story.title} ${story.summary}`.toLowerCase();
+  
+  // Higher score for actionable keywords
+  const actionableScore = ACTIONABLE_KEYWORDS.filter((keyword) =>
+    textLower.includes(keyword)
+  ).length * 3;
+  
+  // Lower score for overly scientific/research-heavy terms (we want to deprioritize these)
+  const scientificTerms = ['molecular', 'genetic', 'cellular', 'pathway', 'mechanism', 'biomarker', 'pharmaceutical', 'clinical trial phase'];
+  const scientificScore = scientificTerms.filter((term) =>
+    textLower.includes(term)
+  ).length * -2;
+  
+  // Bonus for common actionable phrases
+  const actionablePhrases = ['study finds', 'research shows', 'study suggests', 'can help', 'may improve', 'linked to'];
+  const phraseScore = actionablePhrases.filter((phrase) =>
+    textLower.includes(phrase)
+  ).length * 2;
+  
+  return actionableScore + scientificScore + phraseScore;
 }
 
 function cleanHtml(html: string): string {
@@ -138,22 +179,24 @@ export async function fetchHealthNews(): Promise<HealthStory | null> {
         const truncatedSummary =
           summary.length > 300 ? summary.substring(0, 297) + '...' : summary;
 
-        allStories.push({
+        const story: HealthStory = {
           title,
           summary: truncatedSummary,
           link,
           published,
           source: feed.title || 'Health News',
-        });
+        };
+
+        allStories.push(story);
 
         // If we have enough stories, break early
-        if (allStories.length >= 5) {
+        if (allStories.length >= 10) {
           break;
         }
       }
 
       // If we have enough stories from one feed, we can stop
-      if (allStories.length >= 5) {
+      if (allStories.length >= 10) {
         break;
       }
     } catch (error) {
@@ -166,7 +209,18 @@ export async function fetchHealthNews(): Promise<HealthStory | null> {
     return null;
   }
 
-  // Select a random story from available ones
-  const randomIndex = Math.floor(Math.random() * allStories.length);
-  return allStories[randomIndex];
+  // Score and sort stories by relevance (prioritize actionable content)
+  const scoredStories = allStories.map((story) => ({
+    story,
+    score: scoreStoryRelevance(story),
+  }));
+
+  // Sort by score (highest first)
+  scoredStories.sort((a, b) => b.score - a.score);
+
+  // Prefer top-scored stories, but add some randomness to top 3
+  const topStories = scoredStories.slice(0, 3);
+  const selected = topStories[Math.floor(Math.random() * topStories.length)];
+  
+  return selected.story;
 }

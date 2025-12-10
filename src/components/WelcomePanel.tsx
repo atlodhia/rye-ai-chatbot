@@ -79,15 +79,15 @@ export default function WelcomePanel({
   const prompts: Prompt[] = useMemo(
     () => [
       // MOTD prompts
-      { label: 'Give me the gist', text: 'Give me the gist of today’s story.', kind: 'motd' },
-      { label: 'Apply to me', text: 'How should I apply today’s story to my routine?', kind: 'motd' },
-      { label: 'Gear ideas', text: 'What gear or products relate to today’s story?', kind: 'motd' },
-      { label: 'Plan it', text: 'Build me a simple plan inspired by today’s story.', kind: 'motd' },
+      { label: 'Give me the gist', text: 'Give me the gist of today\'s story.', kind: 'motd' },
+      { label: 'Apply to me', text: 'How should I apply today\'s story to my routine?', kind: 'motd' },
+      { label: 'Gear ideas', text: 'Search for gear and products related to today\'s story from your Shopify store and other merchants.', kind: 'motd' },
+      { label: 'Plan it', text: 'Build me a simple plan inspired by today\'s story.', kind: 'motd' },
 
       // ROTD prompts
-      { label: 'Recipe gist', text: 'Give me the gist of today’s recipe.', kind: 'rotd' },
-      { label: 'Make it fit me', text: 'How should I adapt today’s recipe to my goals?', kind: 'rotd' },
-      { label: 'Shopping list', text: 'What ingredients/equipment do I need for today’s recipe?', kind: 'rotd' },
+      { label: 'Recipe gist', text: 'Give me the gist of today\'s recipe.', kind: 'rotd' },
+      { label: 'Make it fit me', text: 'How should I adapt today\'s recipe to my goals?', kind: 'rotd' },
+      { label: 'Shopping list', text: 'What ingredients/equipment do I need for today\'s recipe?', kind: 'rotd' },
     ],
     []
   );
@@ -119,23 +119,23 @@ export default function WelcomePanel({
       : undefined;
 
   return (
-    <div className="p-4 sm:p-5 rounded-xl border border-white/10 bg-[#0f1419] space-y-6">
+    <div className="p-4 sm:p-5 rounded-xl border border-white/10 bg-[#000000] space-y-6">
       {/* ---------- MOTD BLOCK ---------- */}
       <div className="space-y-3">
-        <h2 className="text-lg sm:text-xl font-semibold">
+        <h2 className="text-lg sm:text-xl font-semibold text-[#FFFFFF]">
           {motd?.dayGreeting || fallbackGreeting}
         </h2>
 
-        <div className="text-base sm:text-lg font-medium text-white">
-          {motd?.title || (loadingMotd ? 'Loading today’s topic…' : '')}
+        <div className="text-base sm:text-lg font-medium text-[#FFFFFF]">
+          {motd?.title || (loadingMotd ? 'Loading today\'s topic…' : '')}
         </div>
 
-        <p className="text-sm sm:text-base text-white/80 leading-relaxed">
+        <p className="text-sm sm:text-base text-[#FFFFFF] leading-relaxed">
           {motd?.summary || (!loadingMotd ? fallbackStorySummary : '')}
         </p>
 
         {motd?.sourceName && validMotdUrl && (
-          <p className="text-sm text-white/70">
+          <p className="text-sm text-[#FFFFFF]">
             Read the full story on{' '}
             <a
               href={validMotdUrl}
@@ -149,7 +149,7 @@ export default function WelcomePanel({
           </p>
         )}
 
-        <p className="text-sm text-white/70">
+        <p className="text-sm text-[#FFFFFF]">
           Want a plan or gear picks inspired by this? Try a prompt below or ask anything in the chat.
         </p>
 
@@ -165,7 +165,7 @@ export default function WelcomePanel({
                   rotd: null,
                 })
               }
-              className="px-3 py-2 rounded-full bg-white/10 hover:bg-white/15 text-sm transition"
+              className="px-3 py-2 rounded-full bg-white/10 hover:bg-white/15 text-sm transition text-[#FFFFFF]"
               type="button"
             >
               {p.label}
@@ -176,20 +176,20 @@ export default function WelcomePanel({
 
       {/* ---------- ROTD BLOCK ---------- */}
       <div className="space-y-3 border-t border-white/10 pt-5">
-        <div className="text-sm uppercase tracking-wide text-white/60">
+        <div className="text-sm uppercase tracking-wide text-[#FFFFFF]">
           Recipe of the day
         </div>
 
-        <div className="text-base sm:text-lg font-medium text-white">
-          {rotd?.title || (loadingRotd ? 'Loading today’s recipe…' : '')}
+        <div className="text-base sm:text-lg font-medium text-[#FFFFFF]">
+          {rotd?.title || (loadingRotd ? 'Loading today\'s recipe…' : '')}
         </div>
 
-        <p className="text-sm sm:text-base text-white/80 leading-relaxed">
+        <p className="text-sm sm:text-base text-[#FFFFFF] leading-relaxed">
           {rotd?.summary || (!loadingRotd ? fallbackRecipeSummary : '')}
         </p>
 
         {rotd?.sourceName && validRotdUrl && (
-          <p className="text-sm text-white/70">
+          <p className="text-sm text-[#FFFFFF]">
             Full recipe on{' '}
             <a
               href={validRotdUrl}
@@ -215,7 +215,7 @@ export default function WelcomePanel({
                   rotd,
                 })
               }
-              className="px-3 py-2 rounded-full bg-white/10 hover:bg-white/15 text-sm transition"
+              className="px-3 py-2 rounded-full bg-white/10 hover:bg-white/15 text-sm transition text-[#FFFFFF]"
               type="button"
             >
               {p.label}
