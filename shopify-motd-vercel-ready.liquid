@@ -1,0 +1,87 @@
+{% comment %}
+  Daily Health & Wellness News Widget for Shopify
+  READY TO USE - Vercel Production URL
+  Just paste this into your Shopify page template
+{% endcomment %}
+
+<div id="motd-health-news" style="padding: 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; margin: 24px 0; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+  <div id="motd-loading" style="text-align: center; padding: 20px;">
+    <p style="margin: 0; opacity: 0.9;">Loading today's health story...</p>
+  </div>
+</div>
+
+<script>
+(function() {
+  'use strict';
+  
+  var container = document.getElementById('motd-health-news');
+  if (!container) {
+    console.error('MOTD container not found');
+    return;
+  }
+  
+  // Vercel production API URL
+  var API_URL = 'https://paceline-chat-pai8tsvzp-atls-projects-c767fbd3.vercel.app/api/motd';
+  
+  function escapeHtml(text) {
+    if (!text) return '';
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+  
+  function displayMOTD(data) {
+    var html = '<div style="max-width: 800px; margin: 0 auto;">';
+    html += '<div style="font-size: 0.85em; opacity: 0.9; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">Daily Health & Wellness</div>';
+    html += '<h2 style="font-size: 1.1em; margin: 0 0 12px 0; font-weight: 600; line-height: 1.4;">' + escapeHtml(data.dayGreeting || 'Welcome back') + '</h2>';
+    html += '<h3 style="font-size: 1.4em; margin: 0 0 12px 0; font-weight: 700; line-height: 1.3;">' + escapeHtml(data.title || 'Today\'s Health Story') + '</h3>';
+    html += '<p style="font-size: 1em; line-height: 1.6; margin: 0 0 16px 0; opacity: 0.95;">' + escapeHtml(data.summary || 'No summary available.') + '</p>';
+    if (data.sourceName && data.sourceUrl) {
+      html += '<div style="padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.2);">';
+      html += '<a href="' + escapeHtml(data.sourceUrl) + '" target="_blank" rel="noopener noreferrer" style="color: white; text-decoration: underline; font-size: 0.9em; opacity: 0.9; font-weight: 500;">Read full story on ' + escapeHtml(data.sourceName) + ' →</a>';
+      html += '</div>';
+    }
+    html += '</div>';
+    container.innerHTML = html;
+  }
+  
+  function showError(error) {
+    console.error('MOTD Error:', error);
+    container.innerHTML = '<div style="text-align: center; padding: 20px;"><p style="margin: 0; opacity: 0.8;">Unable to load today\'s health story. Please try again later.</p><p style="margin: 8px 0 0 0; opacity: 0.6; font-size: 0.9em;">Error: ' + escapeHtml(error.message || 'Network error') + '</p></div>';
+  }
+  
+  function loadMOTD() {
+    fetch(API_URL, {
+      method: 'GET',
+      mode: 'cors',
+      credentials: 'omit',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      cache: 'no-store'
+    })
+    .then(function(response) {
+      if (!response.ok) {
+        throw new Error('HTTP ' + response.status + ': ' + response.statusText);
+      }
+      return response.json();
+    })
+    .then(displayMOTD)
+    .catch(showError);
+  }
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadMOTD);
+  } else {
+    loadMOTD();
+  }
+})();
+</script>
+
+<style>
+#motd-health-news a:hover {
+  opacity: 1;
+  text-decoration: none;
+}
+</style>

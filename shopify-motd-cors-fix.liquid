@@ -1,0 +1,113 @@
+{% comment %}
+  MOTD Widget with CORS proxy workaround
+  This version uses a JSONP-like approach or handles CORS better
+{% endcomment %}
+
+<div id="motd-health-news" style="padding: 24px; background: #f5f5f5; border-radius: 8px; margin: 20px 0;">
+  <div id="motd-loading">Loading today's health story...</div>
+</div>
+
+<script>
+(function() {
+  var container = document.getElementById('motd-health-news');
+  if (!container) return;
+  
+  // Vercel production API URL
+  var API_URL = 'https://paceline-chat-pai8tsvzp-atls-projects-c767fbd3.vercel.app/api/motd';
+  
+  function escapeHtml(text) {
+    if (!text) return '';
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+  
+  function displayMOTD(data) {
+    var html = '<div style="max-width: 800px; margin: 0 auto;">';
+    html += '<div style="font-size: 0.85em; color: #666; margin-bottom: 8px; text-transform: uppercase;">Daily Health & Wellness</div>';
+    html += '<h2 style="font-size: 1.1em; margin-bottom: 10px; color: #333;">' + escapeHtml(data.dayGreeting || 'Welcome') + '</h2>';
+    html += '<h3 style="font-size: 1.3em; margin-bottom: 10px; color: #222; font-weight: 600;">' + escapeHtml(data.title || 'Health Story') + '</h3>';
+    html += '<p style="line-height: 1.6; color: #555; margin-bottom: 15px;">' + escapeHtml(data.summary || 'No summary') + '</p>';
+    if (data.sourceName && data.sourceUrl) {
+      html += '<p style="font-size: 0.9em; color: #777;">Source: <a href="' + escapeHtml(data.sourceUrl) + '" target="_blank" rel="noopener" style="color: #0066cc;">' + escapeHtml(data.sourceName) + '</a></p>';
+    }
+    html += '</div>';
+    container.innerHTML = html;
+  }
+  
+  function showError(error) {
+    console.error('MOTD Error:', error);
+    container.innerHTML = '<div style="padding: 20px; text-align: center;"><p style="color: #999; margin-bottom: 10px;">Unable to load health story.</p><p style="color: #bbb; font-size: 0.9em;">Error: ' + escapeHtml(error.message || 'Network error') + '</p><p style="color: #bbb; font-size: 0.85em; margin-top: 10px;">This may be a CORS issue. Check browser console (F12) for details.</p></div>';
+  }
+  
+  // Method 1: Try fetch with all headers
+  function tryFetch() {
+    return fetch(API_URL, {
+      method: 'GET',
+      mode: 'cors',
+      credentials: 'omit',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true'
+      },
+      cache: 'no-store'
+    })
+    .then(function(response) {
+      if (!response.ok) {
+        throw new Error('HTTP ' + response.status + ': ' + response.statusText);
+      }
+      return response.json();
+    });
+  }
+  
+  // Method 2: Try XMLHttpRequest as fallback (sometimes works when fetch doesn't)
+  function tryXHR() {
+    return new Promise(function(resolve, reject) {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', API_URL, true);
+      xhr.setRequestHeader('Accept', 'application/json');
+      xhr.setRequestHeader('ngrok-skip-browser-warning', 'true');
+      xhr.withCredentials = false;
+      
+      xhr.onload = function() {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          try {
+            var data = JSON.parse(xhr.responseText);
+            resolve(data);
+          } catch (e) {
+            reject(new Error('Invalid JSON response'));
+          }
+        } else {
+          reject(new Error('HTTP ' + xhr.status));
+        }
+      };
+      
+      xhr.onerror = function() {
+        reject(new Error('Network error'));
+      };
+      
+      xhr.send();
+    });
+  }
+  
+  function loadMOTD() {
+    // Try fetch first
+    tryFetch()
+      .then(displayMOTD)
+      .catch(function(error) {
+        console.warn('Fetch failed, trying XHR:', error);
+        // Fallback to XHR
+        return tryXHR();
+      })
+      .then(displayMOTD)
+      .catch(showError);
+  }
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadMOTD);
+  } else {
+    loadMOTD();
+  }
+})();
+</script>

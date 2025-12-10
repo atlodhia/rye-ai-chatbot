@@ -1,0 +1,58 @@
+{% comment %}
+  Minimal MOTD Widget - Most compatible version
+{% endcomment %}
+
+<div id="motd-health-news" style="padding: 24px; background: #f5f5f5; border-radius: 8px; margin: 20px 0;">
+  <div id="motd-loading">Loading today's health story...</div>
+</div>
+
+<script>
+(function() {
+  var container = document.getElementById('motd-health-news');
+  if (!container) return;
+  
+  var API_URL = 'https://essie-preneural-mui.ngrok-free.dev/api/motd';
+  
+  function escapeHtml(text) {
+    if (!text) return '';
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+  
+  function loadMOTD() {
+    fetch(API_URL, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+        'ngrok-skip-browser-warning': 'true'
+      }
+    })
+    .then(function(response) {
+      if (!response.ok) throw new Error('HTTP ' + response.status);
+      return response.json();
+    })
+    .then(function(data) {
+      var html = '<div style="max-width: 800px; margin: 0 auto;">';
+      html += '<h2 style="font-size: 1.2em; margin-bottom: 10px;">' + escapeHtml(data.dayGreeting || 'Welcome') + '</h2>';
+      html += '<h3 style="font-size: 1.4em; margin-bottom: 10px; color: #333;">' + escapeHtml(data.title || 'Health Story') + '</h3>';
+      html += '<p style="line-height: 1.6; color: #666; margin-bottom: 15px;">' + escapeHtml(data.summary || 'No summary') + '</p>';
+      if (data.sourceName && data.sourceUrl) {
+        html += '<p style="font-size: 0.9em; color: #888;">Source: <a href="' + escapeHtml(data.sourceUrl) + '" target="_blank" rel="noopener">' + escapeHtml(data.sourceName) + '</a></p>';
+      }
+      html += '</div>';
+      container.innerHTML = html;
+    })
+    .catch(function(error) {
+      console.error('MOTD Error:', error);
+      container.innerHTML = '<p style="color: #999;">Unable to load health story. Check console for details.</p>';
+    });
+  }
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadMOTD);
+  } else {
+    loadMOTD();
+  }
+})();
+</script>
