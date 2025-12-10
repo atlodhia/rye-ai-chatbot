@@ -1,0 +1,98 @@
+{% comment %}
+  Daily Health & Wellness News Widget for Shopify
+  READY TO USE - Just paste this into your Shopify page template
+  API URL is already configured for your ngrok instance
+{% endcomment %}
+
+<div id="motd-health-news" style="padding: 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; margin: 24px 0; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+  <div id="motd-loading" style="text-align: center; padding: 20px;">
+    <p style="margin: 0; opacity: 0.9;">Loading today's health story...</p>
+  </div>
+</div>
+
+<script>
+(function() {
+  const container = document.getElementById('motd-health-news');
+  
+  // Your ngrok API URL
+  const API_URL = 'https://essie-preneural-mui.ngrok-free.dev/api/motd';
+  
+  async function loadMOTD() {
+    try {
+      // Add ngrok-skip-browser-warning header to avoid ngrok's browser warning page
+      const response = await fetch(API_URL, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'ngrok-skip-browser-warning': 'true',
+        },
+        cache: 'no-store',
+        mode: 'cors',
+      });
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch MOTD: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      // Display the content with nice styling
+      container.innerHTML = `
+        <div style="max-width: 800px; margin: 0 auto;">
+          <div style="font-size: 0.85em; opacity: 0.9; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;">
+            Daily Health & Wellness
+          </div>
+          <h2 style="font-size: 1.1em; margin: 0 0 12px 0; font-weight: 600; line-height: 1.4;">
+            ${data.dayGreeting || 'Welcome back'}
+          </h2>
+          <h3 style="font-size: 1.4em; margin: 0 0 12px 0; font-weight: 700; line-height: 1.3;">
+            ${data.title || 'Today\'s Health Story'}
+          </h3>
+          <p style="font-size: 1em; line-height: 1.6; margin: 0 0 16px 0; opacity: 0.95;">
+            ${data.summary || 'No summary available.'}
+          </p>
+          ${data.sourceName && data.sourceUrl ? `
+            <div style="padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.2);">
+              <a href="${data.sourceUrl}" 
+                 target="_blank" 
+                 rel="noopener noreferrer" 
+                 style="color: white; text-decoration: underline; font-size: 0.9em; opacity: 0.9; font-weight: 500;">
+                Read full story on ${data.sourceName} →
+              </a>
+            </div>
+          ` : ''}
+        </div>
+      `;
+    } catch (error) {
+      console.error('Error loading MOTD:', error);
+      container.innerHTML = `
+        <div style="text-align: center; padding: 20px;">
+          <p style="margin: 0; opacity: 0.8;">
+            Unable to load today's health story. Please check the console for details.
+          </p>
+          <p style="margin: 8px 0 0 0; opacity: 0.6; font-size: 0.9em;">
+            Error: ${error.message}
+          </p>
+        </div>
+      `;
+    }
+  }
+  
+  // Load immediately when script runs
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadMOTD);
+  } else {
+    loadMOTD();
+  }
+  
+  // Optional: Refresh every hour to get new stories
+  // setInterval(loadMOTD, 3600000);
+})();
+</script>
+
+<style>
+#motd-health-news a:hover {
+  opacity: 1;
+  text-decoration: none;
+}
+</style>
