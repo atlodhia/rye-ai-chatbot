@@ -126,19 +126,26 @@ function isHealthRelated(text: string): boolean {
   if (!text) return false;
   const textLower = text.toLowerCase();
   
-  // Prioritize fitness/nutrition/consumer health content
+  // STRICT filtering: Must have fitness/nutrition/consumer health keywords
+  // Require at least 2 fitness/nutrition keywords to ensure relevance
   const fitnessNutritionCount = FITNESS_NUTRITION_KEYWORDS.filter((keyword) =>
     textLower.includes(keyword)
   ).length;
   
-  // Also check for general health keywords
+  // Also check for general health keywords, but require more
   const healthKeywordCount = HEALTH_KEYWORDS.filter((keyword) =>
     textLower.includes(keyword)
   ).length;
   
-  // Prefer stories with fitness/nutrition keywords (at least 1) OR multiple health keywords (at least 2)
-  // This prioritizes product-sellable content
-  return fitnessNutritionCount >= 1 || healthKeywordCount >= 2;
+  // STRICT: Require at least 2 fitness/nutrition keywords OR 3+ health keywords
+  // This ensures we only get stories that are clearly about fitness/nutrition/consumer health
+  const isRelevant = fitnessNutritionCount >= 2 || healthKeywordCount >= 3;
+  
+  // Additional check: exclude stories that are clearly NOT health-related
+  const excludeTerms = ['archaeology', 'ancient', 'prehistoric', 'fossil', 'cave', 'stone age', 'paleolithic', 'neolithic', 'evolution of', 'history of', 'anthropology'];
+  const hasExcludeTerms = excludeTerms.some(term => textLower.includes(term));
+  
+  return isRelevant && !hasExcludeTerms;
 }
 
 function scoreStoryRelevance(story: HealthStory): number {

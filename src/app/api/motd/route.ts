@@ -106,10 +106,10 @@ export async function GET(request: Request) {
       date: today,
     };
 
-    // Fallback if no story found
-    const fallbackTitle = 'New research links short walks to improved metabolic health';
+    // Fallback if no story found - use a fitness/nutrition focused story
+    const fallbackTitle = 'Study finds 10-minute daily walks improve heart health and energy levels';
     const fallbackSummary =
-      'A new study suggests that adding short, easy walks throughout the day can meaningfully improve blood sugar control and overall metabolic health—especially for people with busy schedules.';
+      'New research shows that adding just 10 minutes of daily walking can significantly improve cardiovascular health, boost energy, and support better metabolic function. The study suggests starting with short, manageable walks and gradually increasing duration.';
     const fallbackSource = 'Healthline';
     const fallbackUrl = 'https://www.healthline.com/health/exercise-fitness/walking-benefits';
 
@@ -144,9 +144,9 @@ export async function GET(request: Request) {
     return Response.json(
       {
         dayGreeting,
-        title: 'New research links short walks to improved metabolic health',
+        title: 'Study finds 10-minute daily walks improve heart health and energy levels',
         summary:
-          'A new study suggests that adding short, easy walks throughout the day can meaningfully improve blood sugar control and overall metabolic health—especially for people with busy schedules.',
+          'New research shows that adding just 10 minutes of daily walking can significantly improve cardiovascular health, boost energy, and support better metabolic function. The study suggests starting with short, manageable walks and gradually increasing duration.',
         sourceName: 'Healthline',
         sourceUrl: 'https://www.healthline.com/health/exercise-fitness/walking-benefits',
       },
