@@ -304,13 +304,21 @@ GLOBAL STYLE RULES (apply to all replies):
 `;
 
 const coachSystemPrompt = `
-You are Paceline’s assistant — friendly, coach-like, and shopping-capable.
+You are Paceline's assistant — friendly, coach-like, and shopping-capable.
 
 The user is asking for high-level guidance, training help, routines, or general advice.
 
+IMPORTANT - MOTD QUERIES:
+- If the user is asking about "today's story" or the MOTD (Message of the Day), you MUST respond about that story.
+- Use the MOTD context provided to answer their question directly.
+- For "give me the gist" - provide a clear, concise summary of the key points from today's story.
+- For "apply to me" - explain how the story's findings can be applied to their routine.
+- For "plan it" - create a simple, actionable plan based on the story.
+- Be conversational and helpful - don't just repeat the summary, add value.
+
 Rules:
-- Do NOT call any tools.
-- Do NOT output a JSON products array.
+- Do NOT call any tools (unless the user explicitly asks for products/gear).
+- Do NOT output a JSON products array (unless explicitly asking for products).
 - Be conversational and helpful.
 - Give structured guidance (steps, routines, pitfalls, how to start).
 - Ask 1–2 follow-up questions if useful.
@@ -438,12 +446,16 @@ CRITICAL USAGE RULES:
     intent === 'ADVICE' ? coachSystemPrompt : shoppingSystemPrompt;
 
   // ✅ Tell the model whether this turn is MOTD-related.
+  const isMotd = isMotdQuery(latestText);
   const motdGate = `
 SERVER DETECTION:
 - motdAvailable: ${motd ? 'true' : 'false'}
-- userIsAskingAboutMotd: ${isMotdQuery(latestText) ? 'true' : 'false'}
+- userIsAskingAboutMotd: ${isMotd ? 'true' : 'false'}
 
-If userIsAskingAboutMotd is false, do NOT reference MOTD at all.
+CRITICAL INSTRUCTIONS:
+${isMotd && motd 
+  ? '- The user IS asking about today\'s story. You MUST respond using the MOTD context provided above.'
+  : '- The user is NOT asking about today\'s story. Do NOT reference MOTD at all.'}
 `;
 
   system = `${system}\n\n${motdGate}\n\n${motdBlock}`.trim();

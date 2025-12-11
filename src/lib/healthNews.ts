@@ -14,78 +14,120 @@ const NEWS_FEEDS = [
   'https://www.sciencedaily.com/rss/health_medicine.xml', // Science Daily - Health & Medicine (fallback)
 ];
 
-// Keywords that indicate actionable, near-term wellness content (prioritized)
-const ACTIONABLE_KEYWORDS = [
-  'walking',
+// Keywords that indicate fitness, nutrition, and consumer health content (prioritized for product sales)
+const FITNESS_NUTRITION_KEYWORDS = [
+  // Fitness & Exercise
+  'fitness',
   'exercise',
   'workout',
-  'routine',
-  'daily',
-  'tips',
+  'training',
+  'running',
+  'walking',
+  'cycling',
+  'strength',
+  'cardio',
+  'yoga',
+  'pilates',
+  'gym',
+  'equipment',
+  'gear',
+  'apparel',
+  'shoes',
+  'sneakers',
+  'athletic',
+  'sports',
+  'activity tracker',
+  'fitness tracker',
+  'heart rate',
+  'steps',
+  'calories',
+  'burn',
+  'muscle',
+  'recovery',
+  'stretching',
+  'mobility',
+  
+  // Nutrition & Supplements
+  'nutrition',
+  'diet',
+  'protein',
+  'supplement',
+  'vitamin',
+  'mineral',
+  'meal',
+  'food',
+  'eating',
+  'calorie',
+  'macro',
+  'carb',
+  'fat',
+  'fiber',
+  'hydration',
+  'water',
+  'smoothie',
+  'snack',
+  'healthy eating',
+  'meal plan',
+  'nutrition plan',
+  
+  // Consumer Health Products
+  'wearable',
+  'device',
+  'monitor',
+  'scale',
+  'blood pressure',
+  'sleep tracker',
+  'smartwatch',
+  'fitness band',
+  'resistance band',
+  'dumbbell',
+  'kettlebell',
+  'mat',
+  'foam roller',
+  'massage',
+  'recovery tool',
+  
+  // Actionable phrases
+  'study finds',
+  'research shows',
+  'can help',
+  'may improve',
+  'linked to',
   'benefits',
   'improves',
   'reduces',
-  'helps',
-  'study finds',
-  'research shows',
-  'simple',
-  'easy',
-  'quick',
-  'minutes',
-  'steps',
-  'movement',
-  'activity',
-  'fitness',
-  'wellness',
-  'health',
-  'nutrition',
-  'diet',
-  'sleep',
-  'stress',
-  'mental health',
-  'wellbeing',
-  'lifestyle',
-  'habits',
-  'practice',
-  'technique',
-  'method',
 ];
 
-// Keywords to filter for health/wellness content (broader set)
+// Keywords to filter for health/wellness content (broader set, but still product-focused)
 const HEALTH_KEYWORDS = [
   'health',
   'wellness',
-  'medical',
-  'medicine',
-  'study',
-  'research',
+  'fitness',
+  'exercise',
   'nutrition',
   'diet',
-  'exercise',
-  'fitness',
-  'mental health',
-  'heart',
-  'brain',
-  'immune',
-  'vitamin',
   'supplement',
+  'vitamin',
   'sleep',
   'stress',
-  'anxiety',
-  'depression',
-  'wellbeing',
-  'prevention',
+  'recovery',
+  'performance',
+  'energy',
+  'metabolism',
+  'weight',
+  'muscle',
+  'strength',
+  'endurance',
   'lifestyle',
-  'aging',
-  'longevity',
+  'wellbeing',
 ];
 
 function isHealthRelated(text: string): boolean {
   if (!text) return false;
   const textLower = text.toLowerCase();
   
-  // Prioritize actionable content - check for actionable keywords first
-  const actionableCount = ACTIONABLE_KEYWORDS.filter((keyword) =>
+  // Prioritize fitness/nutrition/consumer health content
+  const fitnessNutritionCount = FITNESS_NUTRITION_KEYWORDS.filter((keyword) =>
     textLower.includes(keyword)
   ).length;
   
@@ -94,32 +136,44 @@ function isHealthRelated(text: string): boolean {
     textLower.includes(keyword)
   ).length;
   
-  // Prefer stories with actionable keywords (at least 1) OR multiple health keywords (at least 2)
-  // This prioritizes actionable content while still allowing broader health stories
-  return actionableCount >= 1 || healthKeywordCount >= 2;
+  // Prefer stories with fitness/nutrition keywords (at least 1) OR multiple health keywords (at least 2)
+  // This prioritizes product-sellable content
+  return fitnessNutritionCount >= 1 || healthKeywordCount >= 2;
 }
 
 function scoreStoryRelevance(story: HealthStory): number {
   const textLower = `${story.title} ${story.summary}`.toLowerCase();
   
-  // Higher score for actionable keywords
-  const actionableScore = ACTIONABLE_KEYWORDS.filter((keyword) =>
+  // Higher score for fitness/nutrition/consumer health keywords (product-sellable topics)
+  const fitnessNutritionScore = FITNESS_NUTRITION_KEYWORDS.filter((keyword) =>
     textLower.includes(keyword)
-  ).length * 3;
+  ).length * 4;
   
   // Lower score for overly scientific/research-heavy terms (we want to deprioritize these)
-  const scientificTerms = ['molecular', 'genetic', 'cellular', 'pathway', 'mechanism', 'biomarker', 'pharmaceutical', 'clinical trial phase'];
+  const scientificTerms = ['molecular', 'genetic', 'cellular', 'pathway', 'mechanism', 'biomarker', 'pharmaceutical', 'clinical trial phase', 'cancer treatment', 'disease treatment', 'medical procedure'];
   const scientificScore = scientificTerms.filter((term) =>
+    textLower.includes(term)
+  ).length * -3;
+  
+  // Lower score for medical/clinical topics that don't relate to consumer products
+  const medicalTerms = ['hospital', 'surgery', 'diagnosis', 'treatment', 'medication', 'prescription', 'doctor visit', 'clinical'];
+  const medicalScore = medicalTerms.filter((term) =>
     textLower.includes(term)
   ).length * -2;
   
+  // Bonus for product-related terms
+  const productTerms = ['equipment', 'gear', 'device', 'tracker', 'supplement', 'apparel', 'shoes', 'wearable', 'tool'];
+  const productScore = productTerms.filter((term) =>
+    textLower.includes(term)
+  ).length * 5;
+  
   // Bonus for common actionable phrases
-  const actionablePhrases = ['study finds', 'research shows', 'study suggests', 'can help', 'may improve', 'linked to'];
+  const actionablePhrases = ['study finds', 'research shows', 'study suggests', 'can help', 'may improve', 'linked to', 'benefits'];
   const phraseScore = actionablePhrases.filter((phrase) =>
     textLower.includes(phrase)
   ).length * 2;
   
-  return actionableScore + scientificScore + phraseScore;
+  return fitnessNutritionScore + scientificScore + medicalScore + productScore + phraseScore;
 }
 
 function cleanHtml(html: string): string {
