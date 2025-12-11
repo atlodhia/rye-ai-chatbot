@@ -200,10 +200,14 @@ export default function Chat() {
               <WelcomePanel
                 onPick={({ text, motd }: PickPayload) => {
                   motdRef.current = motd; // persist for follow-ups
-                  sendMessage({
-                    text,
-                    data: motd ? { motd } : undefined,
-                  });
+                  try {
+                    sendMessage({
+                      text,
+                      data: motd ? { motd } : undefined,
+                    });
+                  } catch (error) {
+                    console.error('Error sending message:', error);
+                  }
                 }}
               />
             </div>

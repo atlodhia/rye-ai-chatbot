@@ -141,9 +141,29 @@ function isHealthRelated(text: string): boolean {
   // This ensures we only get stories that are clearly about fitness/nutrition/consumer health
   const isRelevant = fitnessNutritionCount >= 2 || healthKeywordCount >= 3;
   
-  // Additional check: exclude stories that are clearly NOT health-related
-  const excludeTerms = ['archaeology', 'ancient', 'prehistoric', 'fossil', 'cave', 'stone age', 'paleolithic', 'neolithic', 'evolution of', 'history of', 'anthropology'];
-  const hasExcludeTerms = excludeTerms.some(term => textLower.includes(term));
+  // Exclude niche medical conditions and diseases
+  const excludeMedicalTerms = [
+    'archaeology', 'ancient', 'prehistoric', 'fossil', 'cave', 'stone age', 
+    'paleolithic', 'neolithic', 'evolution of', 'history of', 'anthropology',
+    'tumor', 'cancer', 'tumor', 'brain tumor', 'cancer treatment', 'chemotherapy',
+    'radiation', 'oncology', 'malignant', 'benign tumor', 'metastasis',
+    'diabetes type', 'type 1 diabetes', 'type 2 diabetes', 'insulin resistance',
+    'heart disease', 'heart attack', 'stroke', 'cardiovascular disease',
+    'alzheimer', 'dementia', 'parkinson', 'multiple sclerosis', 'epilepsy',
+    'autism', 'adhd', 'bipolar', 'schizophrenia', 'depression treatment',
+    'anxiety disorder', 'ptsd', 'ocd', 'eating disorder',
+    'covid', 'coronavirus', 'pandemic', 'vaccine', 'immunization',
+    'surgery', 'operation', 'medical procedure', 'clinical trial',
+    'rare disease', 'genetic disorder', 'syndrome', 'chronic illness',
+    'kidney disease', 'liver disease', 'lung disease', 'respiratory disease',
+    'arthritis', 'osteoporosis', 'fibromyalgia', 'lupus', 'crohn',
+    'ibd', 'celiac', 'gluten intolerance', 'allergy treatment',
+    'hiv', 'aids', 'hepatitis', 'tuberculosis', 'malaria',
+    'pregnancy', 'maternal', 'prenatal', 'postpartum',
+    'pediatric', 'children\'s disease', 'childhood cancer',
+    'elderly care', 'nursing home', 'hospice',
+  ];
+  const hasExcludeTerms = excludeMedicalTerms.some(term => textLower.includes(term));
   
   return isRelevant && !hasExcludeTerms;
 }
@@ -157,16 +177,22 @@ function scoreStoryRelevance(story: HealthStory): number {
   ).length * 4;
   
   // Lower score for overly scientific/research-heavy terms (we want to deprioritize these)
-  const scientificTerms = ['molecular', 'genetic', 'cellular', 'pathway', 'mechanism', 'biomarker', 'pharmaceutical', 'clinical trial phase', 'cancer treatment', 'disease treatment', 'medical procedure'];
+  const scientificTerms = ['molecular', 'genetic', 'cellular', 'pathway', 'mechanism', 'biomarker', 'pharmaceutical', 'clinical trial phase', 'cancer treatment', 'disease treatment', 'medical procedure', 'tumor', 'oncology', 'malignant'];
   const scientificScore = scientificTerms.filter((term) =>
+    textLower.includes(term)
+  ).length * -5;
+  
+  // Lower score for medical/clinical topics that don't relate to consumer products
+  const medicalTerms = ['hospital', 'surgery', 'diagnosis', 'treatment', 'medication', 'prescription', 'doctor visit', 'clinical', 'disease', 'disorder', 'syndrome', 'condition', 'illness'];
+  const medicalScore = medicalTerms.filter((term) =>
     textLower.includes(term)
   ).length * -3;
   
-  // Lower score for medical/clinical topics that don't relate to consumer products
-  const medicalTerms = ['hospital', 'surgery', 'diagnosis', 'treatment', 'medication', 'prescription', 'doctor visit', 'clinical'];
-  const medicalScore = medicalTerms.filter((term) =>
+  // Heavily penalize niche medical conditions
+  const nicheMedicalTerms = ['brain tumor', 'cancer', 'diabetes', 'heart disease', 'alzheimer', 'parkinson', 'autism', 'adhd', 'rare disease', 'genetic disorder'];
+  const nicheMedicalScore = nicheMedicalTerms.filter((term) =>
     textLower.includes(term)
-  ).length * -2;
+  ).length * -10;
   
   // Bonus for product-related terms
   const productTerms = ['equipment', 'gear', 'device', 'tracker', 'supplement', 'apparel', 'shoes', 'wearable', 'tool'];
@@ -180,7 +206,7 @@ function scoreStoryRelevance(story: HealthStory): number {
     textLower.includes(phrase)
   ).length * 2;
   
-  return fitnessNutritionScore + scientificScore + medicalScore + productScore + phraseScore;
+  return fitnessNutritionScore + scientificScore + medicalScore + nicheMedicalScore + productScore + phraseScore;
 }
 
 function cleanHtml(html: string): string {
