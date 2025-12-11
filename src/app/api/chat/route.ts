@@ -275,18 +275,18 @@ function detectIntent(latestUserText: string): Intent {
   const hasUrl = /(https?:\/\/[^\s]+)/i.test(text);
   if (hasUrl) return 'PRODUCT_LINK';
 
-  // Check for MOTD queries first - these should use coach mode
-  const motdQueries = /(give me the gist|apply to me|plan it|today's story|today's topic|motd|story of the day)/i;
-  if (motdQueries.test(text)) return 'ADVICE';
-
-  // Check for shopping queries
-  const shoppingQueries = /(search for gear|gear ideas|products|shop|buy|purchase|order|price|budget|under \$|under\s+\d+|deal|discount|link|show me products|best|recommend|top|vs\.?|compare|packs|shoes|belt|vest|watch|tracker|plate|backpack)/i;
-  if (shoppingQueries.test(text)) return 'SHOPPING';
-
   const adviceCues =
-    /(how do i|how should i|routine|plan|getting into|start|begin|training|tips|guide|what type of things|help me|suggest a program|choose|decide)/i;
+    /(how do i|how should i|routine|plan|getting into|start|begin|training|tips|guide|what type of things|help me|suggest a program|choose|decide|compare)/i;
 
-  if (adviceCues.test(text)) return 'ADVICE';
+  const strongShoppingCues =
+    /(buy|purchase|order|price|budget|under \$|under\s+\d+|deal|discount|link|show me products)/i;
+
+  if (adviceCues.test(text) && !strongShoppingCues.test(text)) return 'ADVICE';
+
+  const shoppingCues =
+    /(best|recommend|top|vs\.?|compare|packs|shoes|belt|vest|watch|tracker|plate|backpack)/i;
+
+  if (strongShoppingCues.test(text) || shoppingCues.test(text)) return 'SHOPPING';
 
   return 'OTHER';
 }
@@ -462,29 +462,17 @@ ${isMotd && motd
 
   if (!incomingMessages.length) {
     console.warn('[chat route] no messages provided');
-    return Response.json({ error: 'No messages provided' }, { status: 400 });
   }
 
-  try {
-    const result = streamText({
-      model: openai('gpt-4o-mini'),
-      system,
-      messages: convertToModelMessages(incomingMessages),
-      stopWhen: stepCountIs(14),
-      tools,
-    });
+  const result = streamText({
+    model: openai('gpt-5-mini'),
+    system,
+    messages: convertToModelMessages(incomingMessages),
+    stopWhen: stepCountIs(14),
+    tools,
+  });
 
-    return result.toUIMessageStreamResponse({
-      originalMessages: incomingMessages,
-    });
-  } catch (error: any) {
-    console.error('[chat route] Error streaming text:', error);
-    return Response.json(
-      { 
-        error: 'Failed to generate response',
-        message: error?.message || 'Unknown error'
-      },
-      { status: 500 }
-    );
-  }
+  return result.toUIMessageStreamResponse({
+    originalMessages: incomingMessages,
+  });
 }
